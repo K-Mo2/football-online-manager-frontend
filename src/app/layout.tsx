@@ -1,7 +1,7 @@
 import "./globals.css";
 import ReactQueryProvider from "../../utils/Provider";
 import { AuthContextProvider } from "../../contexts/AuthContext";
-import { Toaster } from "react-hot-toast";
+import ToastProvider from "../../components/ToastProvider";
 
 export default function RootLayout({
   children,
@@ -11,12 +11,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ReactQueryProvider>
-          <AuthContextProvider>
-            {children}
-            <Toaster position="top-center" />
-          </AuthContextProvider>
-        </ReactQueryProvider>
+        <ToastProvider>
+          <ReactQueryProvider>
+            <AuthContextProvider>{children}</AuthContextProvider>
+          </ReactQueryProvider>
+        </ToastProvider>
       </body>
     </html>
   );
