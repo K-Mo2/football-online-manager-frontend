@@ -1,5 +1,4 @@
-"use client";
-
+// import { useEffect, useState } from "react";
 import { Toaster } from "react-hot-toast";
 
 interface ToastProviderProps {
@@ -7,10 +6,17 @@ interface ToastProviderProps {
 }
 
 export default function ToastProvider({ children }: ToastProviderProps) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => setIsClient(true), []);
+
   return (
     <>
       {children}
-      <Toaster position="top-center" />
+      <div suppressHydrationWarning>
+        {/* {isClient && <Toaster position="top-center" />} */}
+        <Toaster position="top-center" />
+      </div>
     </>
   );
 }

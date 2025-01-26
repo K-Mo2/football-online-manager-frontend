@@ -4,7 +4,7 @@ import { useRegister, useLogin } from "../../../hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { useAuthCtx } from "../../../contexts/AuthContext";
-import toast from "react-hot-toast";
+import AlertComponent from "../../../components/AlertComponent";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -15,38 +15,47 @@ export default function Login() {
   const login = useLogin();
   const router = useRouter();
   const pathname = usePathname();
+  const [alert, setAlert] = useState({ type: "", message: "" });
+
+  useEffect(() => {
+    if (register.isError) {
+      setAlert({
+        type: "error",
+        message: register.error?.response?.data?.message || error.message,
+      });
+    }
+
+    if (register.isSuccess) {
+      setAlert({
+        type: "success",
+        message: "Registered Successfully! Sign in please!",
+      });
+    }
+
+    if (login.isError) {
+      setAlert({
+        type: "error",
+        message: login.error?.response?.data?.message || error.message,
+      });
+    }
+
+    if (login.isSuccess) {
+      setAlert({ type: "success", message: "Signed in Successfully!" });
+    }
+  }, [
+    login.isError,
+    login.error,
+    login.isSuccess,
+    register.isError,
+    register.error,
+    register.isSuccess,
+  ]);
 
   useEffect(() => {
     if (isAuthenticated && pathname == "/login") {
       router.push("/");
     }
-
-    if (register.isError) {
-      toast.error(register.error?.response?.data?.message || error.message);
-    }
-
-    if (register.isSuccess) {
-      toast.success("Registered Successfully! Sign in please!");
-    }
-
-    if (login.isError) {
-      toast.error(login.error?.response?.data?.message || error.message);
-    }
-
-    if (login.isSuccess) {
-      toast.success("Signed in Successfully!");
-    }
-  }, [
-    isAuthenticated,
-    pathname,
-    router,
-    login,
-    register.isError,
-    register.error,
-    register.isSuccess,
-    login.isError,
-    login.isSuccess,
-  ]);
+  }, [isAuthenticated, pathname, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +70,9 @@ export default function Login() {
 
   return (
     <div className="mt-24 flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
+      {alert.message.length > 0 && (
+        <AlertComponent alertType={alert.type} message={alert.message} />
+      )}
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
         <h2 className="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">
           Football Online Manager

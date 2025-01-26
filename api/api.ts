@@ -23,7 +23,6 @@ export const refreshToken = async function (refreshToken: string) {
 
 export const getUserData = async function () {
   const data = await apiClient.get("/profile");
-  console.log(data);
   return data;
 };
 

@@ -5,7 +5,6 @@ import { register, login, logout, refreshToken, getUserData } from "../api/api";
 
 export function useRegister() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: register,
     onSuccess: (data: any) => {
@@ -41,14 +40,19 @@ export function useLogout() {
   });
 }
 
-export function useRefreshToken() {
-  const { refreshTokenHandler } = useAuthCtx();
-
+export function useRefreshToken(cb: any) {
+  const router = useRouter();
   return useMutation({
     mutationFn: refreshToken,
     onSuccess: (data: any) => {
-      console.log(data);
-      refreshTokenHandler(data.data.tokens);
+      console.log(data.data);
+      cb(data.data);
+    },
+    onError: () => {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+      router.replace("/login");
     },
   });
 }

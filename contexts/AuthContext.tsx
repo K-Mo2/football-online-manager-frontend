@@ -9,6 +9,7 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import { useRefreshToken } from "../hooks/useAuth";
 import toast from "react-hot-toast";
+import apiClient from "../lib/axios";
 
 type Tokens = {
   accessToken: string;
@@ -30,6 +31,7 @@ export function AuthContextProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<unknown | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const refreshTokenFn = useRefreshToken(refreshTokenHandler);
 
   useEffect(() => {
     try {
@@ -40,8 +42,6 @@ export function AuthContextProvider({ children }: { children: ReactNode }) {
         setIsAuthenticated(true);
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
-        const tokenTimeout = setTimeout(useRefreshToken, 14 * 60 * 1000);
-        return () => clearTimeout(tokenTimeout);
       }
 
       if (pathname != "/login" && (!accessToken || !userData)) {
@@ -59,6 +59,25 @@ export function AuthContextProvider({ children }: { children: ReactNode }) {
       setUser(null);
     }
   }, [pathname]);
+
+  useEffect(() => {
+    apiClient.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status == 401) {
+          try {
+            const refreshToken = localStorage.getItem("refreshToken");
+            if (refreshToken) {
+              refreshTokenFn.mutate(refreshToken);
+            }
+          } catch (error) {
+            console.log(error);
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+  }, []);
 
   const loginHandler = function (tokens: Tokens, userData: unknown) {
     try {
@@ -83,7 +102,7 @@ export function AuthContextProvider({ children }: { children: ReactNode }) {
     router.push("/login");
   };
 
-  const refreshTokenHandler = function (tokens: Tokens) {
+  function refreshTokenHandler(tokens: Tokens) {
     try {
       if (tokens) {
         localStorage.setItem("accessToken", tokens.accessToken);
@@ -93,7 +112,7 @@ export function AuthContextProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.log(error);
     }
-  };
+  }
 
   return (
     <AuthContext.Provider

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import withAuth from "../../../hoc/withAuth";
 import { useGetUserData, useLogout } from "../../../hooks/useAuth";
 import { UpdatedRow } from "../../../types/types";
@@ -21,7 +21,7 @@ import CancelIcon from "@mui/icons-material/Close";
 import { useUpdatePlayer } from "../../../hooks/usePlayers";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "../../../components/LoadingSpinner";
-import toast from "react-hot-toast";
+import AlertComponent from "../../../components/AlertComponent";
 
 function Profile() {
   const router = useRouter();
@@ -34,21 +34,27 @@ function Profile() {
   const [rows, setRows] = useState(teamPlayers);
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
   const updatePlayer = useUpdatePlayer();
-  let currency = new Intl.NumberFormat("en-US", {
+  const [alert, setAlert] = useState({ type: "", message: "" });
+
+  const currency = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
   });
+
+  useEffect(() => {
+    // Error State
+    if (isError) {
+      setAlert({
+        type: "error",
+        message: error?.response?.data?.message || error.message,
+      });
+    }
+  }, [isError]);
 
   //   Loading State
   if (isLoading) {
     return <LoadingSpinner />;
   }
-
-  // Error State
-  if (isError) {
-    toast.error(error?.response?.data?.message || error.message);
-  }
-
   // Safely extract team players with optional chaining
 
   const handleRowEditStop: GridEventListener<"rowEditStop"> = (
@@ -98,45 +104,45 @@ function Profile() {
   };
 
   const columns: GridColDef<(typeof teamPlayers)[number]>[] = [
-    { field: "id", headerName: "ID", width: 150 },
-    { field: "number", headerName: "Number", width: 150 },
+    { field: "id", headerName: "ID", flex: 1 },
+    { field: "number", headerName: "Number", flex: 1 },
     {
       field: "name",
       headerName: "Name",
-      width: 150,
+      flex: 1,
       editable: false,
     },
     {
       field: "position",
       headerName: "Position",
-      width: 150,
+      flex: 1,
       editable: false,
     },
     {
       field: "team",
       headerName: "Team",
-      width: 150,
+      flex: 1,
       editable: false,
     },
     {
       field: "price",
       headerName: "Price",
       type: "number",
-      width: 150,
+      flex: 1,
       editable: true,
     },
     {
       field: "isMarketListed",
       headerName: "For Sale",
       type: "boolean",
-      width: 150,
+      flex: 1,
       editable: true,
     },
     {
       field: "actions",
       type: "actions",
       headerName: "Actions",
-      width: 100,
+      flex: 1,
       cellClassName: "actions",
       getActions: ({ id }) => {
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
@@ -180,6 +186,9 @@ function Profile() {
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="w-full h-full">
+        {alert.message.length > 0 && (
+          <AlertComponent alertType={alert.type} message={alert.message} />
+        )}
         <div className="w-full h-10 flex flex-row items-center justify-end mt-8">
           <div></div>
           <div
@@ -215,7 +224,7 @@ function Profile() {
         <Box
           sx={{
             height: "auto",
-            width: "65%",
+            width: "95%",
             alignSelf: "center",
             marginLeft: "auto",
             marginRight: "auto",

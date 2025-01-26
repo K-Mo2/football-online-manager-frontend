@@ -13,15 +13,15 @@ import { useRouter } from "next/navigation";
 import { useLogout } from "../../hooks/useAuth";
 import { Player } from "../../types/types";
 import LoadingSpinner from "../../components/LoadingSpinner";
-import toast from "react-hot-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import AlertComponent from "../../components/AlertComponent";
 
 function Home() {
   const router = useRouter();
   const logout = useLogout();
   const { data, isLoading, isError, error } = useGetPlayers();
   const buyPlayer = useBuyPlayer();
-
+  const [alert, setAlert] = useState({ type: "", message: "" });
   const players = data?.data?.players || [];
   players.map((player: Player) => (player.teamName = player?.team?.name));
 
@@ -32,29 +32,27 @@ function Home() {
   useEffect(() => {
     // Error State
     if (isError) {
-      toast.error(error?.response?.data?.message || error.message);
+      setAlert({
+        type: "error",
+        message: error?.response?.data?.message || error.message,
+      });
     }
 
     if (buyPlayer.isError) {
-      console.log(buyPlayer);
-      toast.error(
-        buyPlayer.error?.response?.data?.message || buyPlayer.error.message
-      );
+      setAlert({
+        type: "error",
+        message:
+          buyPlayer.error?.response?.data?.message || buyPlayer.error.message,
+      });
     }
 
     if (buyPlayer.isSuccess) {
-      toast.success("Congratulation you bought a new player!");
+      setAlert({
+        type: "success",
+        message: "Congratulation you bought a new player!",
+      });
     }
-  }, [
-    isLoading,
-    buyPlayer.isPending,
-    buyPlayer.isError,
-    isError,
-    buyPlayer.error,
-    error,
-    buyPlayer,
-    buyPlayer.isSuccess,
-  ]);
+  }, [buyPlayer.isError, isError, buyPlayer.isSuccess]);
 
   // Loading State
   if (isLoading || buyPlayer.isPending) {
@@ -62,38 +60,38 @@ function Home() {
   }
 
   const columns: GridColDef<(typeof players)[number]>[] = [
-    { field: "id", headerName: "ID", width: 150 },
-    { field: "number", headerName: "Number", width: 150 },
+    { field: "id", headerName: "ID", flex: 1 },
+    { field: "number", headerName: "Number", flex: 1 },
     {
       field: "name",
       headerName: "Name",
-      width: 150,
       editable: false,
+      flex: 1,
     },
     {
       field: "position",
       headerName: "Position",
-      width: 150,
       editable: false,
+      flex: 1,
     },
     {
       field: "teamName",
       headerName: "Team",
-      width: 150,
       editable: false,
+      flex: 1,
     },
     {
       field: "price",
       headerName: "Price",
       type: "number",
-      width: 150,
       editable: false,
+      flex: 1,
     },
     {
       field: "actions",
       type: "actions",
       headerName: "Buy",
-      width: 100,
+      flex: 1,
       cellClassName: "actions",
       getActions: ({ id }) => {
         return [
@@ -129,13 +127,15 @@ function Home() {
           </div>
         </div>
       </div>
+      {alert.message.length > 0 && (
+        <AlertComponent alertType={alert.type} message={alert.message} />
+      )}
       <h1 className="text-3xl font-bold mb-6 text-center">Transfer Market</h1>
-
       <div className="mb-8">
         <Box
           sx={{
             height: "auto",
-            width: "60%",
+            width: "95%",
             alignSelf: "center",
             marginLeft: "auto",
             marginRight: "auto",
